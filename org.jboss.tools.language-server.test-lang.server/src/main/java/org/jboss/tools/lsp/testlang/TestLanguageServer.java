@@ -13,6 +13,7 @@ import org.jboss.tools.lsp.ipc.MessageType;
 import org.jboss.tools.lsp.ipc.RequestHandler;
 import org.jboss.tools.lsp.ipc.ServiceStatus;
 import org.jboss.tools.lsp.messages.LogMessageParams;
+import org.jboss.tools.lsp.messages.ShowMessageParams;
 import org.jboss.tools.lsp.testlang.handlers.DocumentSavedHandler;
 import org.jboss.tools.lsp.testlang.handlers.ExitHandler;
 import org.jboss.tools.lsp.testlang.handlers.InitHandler;
@@ -66,16 +67,30 @@ public class TestLanguageServer extends LSPServer {
 	
 
 	/**
-	 * Sends the given message back to the client as a notification
+	 * Sends the given <code>log message notification</code> back to the client as a notification
 	 * 
 	 * @param type the type of message
 	 * @param msg
 	 *            The message to send back to the client
 	 */
-	public void sendNotification(final MessageType type, final String msg) {
+	public void sendLogMessageNotification(final MessageType type, final String msg) {
 		NotificationMessage<LogMessageParams> message = new NotificationMessage<>();
 		message.setMethod(LSPMethods.WINDOW_LOGMESSAGE.getMethod());
 		message.setParams(new LogMessageParams().withMessage(msg).withType(Double.valueOf(type.getType())));
+		send(message);
+	}
+
+	/**
+	 * Sends the given <code>show message notification</code> back to the client as a notification
+	 * 
+	 * @param type the type of message
+	 * @param msg
+	 *            The message to send back to the client
+	 */
+	public void sendShowMessageNotification(final MessageType type, final String msg) {
+		final NotificationMessage<ShowMessageParams> message = new NotificationMessage<>();
+		message.setMethod(LSPMethods.WINDOW_SHOWMESSAGE.getMethod());
+		message.setParams(new ShowMessageParams().withMessage(msg).withType(Double.valueOf(type.getType())));
 		send(message);
 	}
 

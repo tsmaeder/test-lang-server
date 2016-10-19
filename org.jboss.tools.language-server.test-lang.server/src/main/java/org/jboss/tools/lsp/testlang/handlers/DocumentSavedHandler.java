@@ -2,17 +2,15 @@ package org.jboss.tools.lsp.testlang.handlers;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.jboss.tools.lsp.base.LSPMethods;
-import org.jboss.tools.lsp.base.NotificationMessage;
 import org.jboss.tools.lsp.ipc.MessageType;
 import org.jboss.tools.lsp.ipc.RequestHandler;
-import org.jboss.tools.lsp.messages.Diagnostic;
 import org.jboss.tools.lsp.messages.DidSaveTextDocumentParams;
-import org.jboss.tools.lsp.messages.PublishDiagnosticsParams;
 import org.jboss.tools.lsp.testlang.DocumentManager;
 import org.jboss.tools.lsp.testlang.TestLanguageServer;
 import org.slf4j.Logger;
@@ -37,6 +35,9 @@ public class DocumentSavedHandler implements RequestHandler<DidSaveTextDocumentP
 
 	private final TestLanguageServer testLanguageServer;
 
+	protected static final Pattern showMessagePattern = Pattern
+			.compile("window/showMessage:(?<type>\\w+):(?<message>.+)");
+
 	/**
 	 * Constructor
 	 * 
@@ -52,6 +53,9 @@ public class DocumentSavedHandler implements RequestHandler<DidSaveTextDocumentP
 		return LSPMethods.DOCUMENT_SAVED.getMethod().equals(request);
 	}
 
+	/**
+	 * Handles content in the file
+	 */
 	@Override
 	public Object handle(final DidSaveTextDocumentParams documentChangeParams) {
 		LOGGER.info("Handling document saved");
@@ -60,21 +64,15 @@ public class DocumentSavedHandler implements RequestHandler<DidSaveTextDocumentP
 		try {
 			final List<String> lines = documentManager.getContent(documentUri);
 			LOGGER.info("Document saved: \n{}", lines.stream().collect(Collectors.joining("\n")));
-			if(!lines.stream().anyMatch(line -> line.startsWith("ERROR"))) {
-				LOGGER.info("Looking for lines starting with the 'ERROR' word but found none.");
-			}
-			lines.stream().filter(line -> line.startsWith("ERROR")).forEach(line -> {
-				LOGGER.info("Found line starting with the 'ERROR' word: {}", line);
-				final Diagnostic diagnostic = new Diagnostic().withMessage(line.substring("ERROR ".length()))
-						.withSeverity(new Double(MessageType.Error.getType())); //.withRange(new Range());
-				final PublishDiagnosticsParams params = new PublishDiagnosticsParams().withUri(documentUri)
-						.withDiagnostics(Arrays.asList(diagnostic));
-				final NotificationMessage<PublishDiagnosticsParams> message = new NotificationMessage<>();
-				message.setMethod(LSPMethods.DOCUMENT_DIAGNOSTICS.getMethod());
-				message.setParams(params);
-				this.testLanguageServer.send(message);
-			});
-
+			// iterate on lines with a counter
+			lines.stream().map(line -> showMessagePattern.matcher(line)).filter(matcher -> matcher.matches())
+					.forEach(matcher -> {
+						final MessageType type = MessageType.from(matcher.group(1));
+						final String message = matcher.group(2).trim();
+						LOGGER.info("Found line starting with the '{}' keyword:\n{} {}",
+								LSPMethods.WINDOW_SHOWMESSAGE.getMethod(), type.toString().toLowerCase(), message);
+						this.testLanguageServer.sendShowMessageNotification(type, message);
+					});
 		} catch (IOException | URISyntaxException e) {
 			LOGGER.error("Failed to read document content at " + documentUri, e);
 		}

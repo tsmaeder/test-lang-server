@@ -58,7 +58,7 @@ public class TestLanguageServerTest {
 			throws IOException, InterruptedException, ExecutionException, URISyntaxException {
 		// given a test lang server with a mock'd DocumentManager
 		final DocumentManager mockDocumentManager = Mockito.mock(DocumentManager.class);
-		final List<String> docLines = Arrays.asList("foo and bar", "ERROR an error");
+		final List<String> docLines = Arrays.asList("foo and bar", "window/showMessage:error:a message to show");
 		Mockito.when(mockDocumentManager.getContent("file:///path/to/file")).thenReturn(docLines);
 		final TestLanguageServer testLangServer = new TestLanguageServer(mockDocumentManager);
 		testLangServer.start();
@@ -71,7 +71,7 @@ public class TestLanguageServerTest {
 		fakeClient.sendDidSaveNotification("file:///path/to/file");
 		// then expect to received a message notification before the timeout
 		fakeClient.waitforResponses(TimeUnit.SECONDS.toMillis(600), "language/status", "language/status",
-				"textDocument/publishDiagnostics");
+				"window/showMessage");
 		assertTrue("Did not receive all messages", fakeClient.verifyMessages());
 	}
 

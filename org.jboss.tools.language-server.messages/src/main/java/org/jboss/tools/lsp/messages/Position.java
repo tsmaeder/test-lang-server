@@ -57,6 +57,10 @@ public class Position {
         return this;
     }
 
+    public Position withLine(int line) {
+    	return withLine(new Double(line));
+    }
+    
     /**
      * Character offset on a line in a document (zero-based).
      * 
@@ -80,6 +84,10 @@ public class Position {
     public Position withCharacter(Double character) {
         this.character = character;
         return this;
+    }
+
+    public Position withCharacter(int character) {
+    	return withCharacter(new Double(character));
     }
 
 }
