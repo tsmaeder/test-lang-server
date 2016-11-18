@@ -34,8 +34,10 @@ public enum MessageType {
 			return Error;
 		case "WARNING":
 			return Warning;
-		default:
+		case "INFO":
 			return Info;
+		default:
+			return Log;
 		}
 	}
 

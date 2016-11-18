@@ -69,8 +69,8 @@ public class DocumentSavedHandler implements RequestHandler<DidSaveTextDocumentP
 					.forEach(matcher -> {
 						final MessageType type = MessageType.from(matcher.group(1));
 						final String message = matcher.group(2).trim();
-						LOGGER.info("Found line starting with the '{}' keyword:\n{} {}",
-								LSPMethods.WINDOW_SHOWMESSAGE.getMethod(), type.toString().toLowerCase(), message);
+						LOGGER.info("Found line starting with the '{}' keyword:\n{} (type={})",
+								LSPMethods.WINDOW_SHOWMESSAGE.getMethod(), message, type.toString().toLowerCase());
 						this.testLanguageServer.sendShowMessageNotification(type, message);
 					});
 		} catch (IOException | URISyntaxException e) {

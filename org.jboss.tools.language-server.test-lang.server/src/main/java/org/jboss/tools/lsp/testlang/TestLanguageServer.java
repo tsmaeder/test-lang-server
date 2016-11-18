@@ -90,7 +90,7 @@ public class TestLanguageServer extends LSPServer {
 	public void sendShowMessageNotification(final MessageType type, final String msg) {
 		final NotificationMessage<ShowMessageParams> message = new NotificationMessage<>();
 		message.setMethod(LSPMethods.WINDOW_SHOWMESSAGE.getMethod());
-		message.setParams(new ShowMessageParams().withMessage(msg).withType(Double.valueOf(type.getType())));
+		message.setParams(new ShowMessageParams().withMessage(msg).withType(type.getType()));
 		send(message);
 	}
 
