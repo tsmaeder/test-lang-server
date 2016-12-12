@@ -11,13 +11,14 @@ public class DocumentHighlight {
     @SerializedName("range")
     @Expose
     private Range range;
+    
     /**
      * The highlight kind, default is [text](#DocumentHighlightKind.Text).
      * 
      */
     @SerializedName("kind")
     @Expose
-    private Double kind;
+    private Integer kind;
 
     /**
      * 
@@ -48,7 +49,7 @@ public class DocumentHighlight {
      * @return
      *     The kind
      */
-    public Double getKind() {
+    public Integer getKind() {
         return kind;
     }
 
@@ -58,13 +59,49 @@ public class DocumentHighlight {
      * @param kind
      *     The kind
      */
-    public void setKind(Double kind) {
+    public void setKind(Integer kind) {
         this.kind = kind;
     }
 
-    public DocumentHighlight withKind(Double kind) {
+    public DocumentHighlight withKind(Integer kind) {
         this.kind = kind;
         return this;
     }
 
+	@Override
+	public String toString() {
+		return "DocumentHighlight [range=" + range + ", kind=" + kind + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((kind == null) ? 0 : kind.hashCode());
+		result = prime * result + ((range == null) ? 0 : range.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DocumentHighlight other = (DocumentHighlight) obj;
+		if (kind == null) {
+			if (other.kind != null)
+				return false;
+		} else if (!kind.equals(other.kind))
+			return false;
+		if (range == null) {
+			if (other.range != null)
+				return false;
+		} else if (!range.equals(other.range))
+			return false;
+		return true;
+	}
+    
 }

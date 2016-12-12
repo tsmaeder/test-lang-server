@@ -3,7 +3,6 @@ package org.jboss.tools.lsp.testlang.handlers;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 

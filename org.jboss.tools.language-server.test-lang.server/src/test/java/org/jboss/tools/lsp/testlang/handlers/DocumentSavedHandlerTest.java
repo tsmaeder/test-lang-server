@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
@@ -26,7 +25,7 @@ import org.jboss.tools.lsp.messages.TextDocumentIdentifier;
 import org.jboss.tools.lsp.testlang.DocumentManager;
 import org.jboss.tools.lsp.testlang.TestLanguageServer;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -50,7 +49,6 @@ public class DocumentSavedHandlerTest {
 		// then
 		Mockito.verify(testLanguageServer, Mockito.times(1)).sendShowMessageNotification(MessageType.Error,
 				"a message");
-
 	}
 
 	@Test
@@ -67,8 +65,8 @@ public class DocumentSavedHandlerTest {
 		// when
 		documentSavedHandler.handle(didSaveTextDocumentParams);
 		// then
-		Mockito.verify(testLanguageServer, Mockito.times(0)).sendShowMessageNotification(Matchers.any(),
-				Matchers.any());
+		Mockito.verify(testLanguageServer, Mockito.times(0)).sendShowMessageNotification(ArgumentMatchers.any(),
+				ArgumentMatchers.any());
 	}
 	
 	@Test

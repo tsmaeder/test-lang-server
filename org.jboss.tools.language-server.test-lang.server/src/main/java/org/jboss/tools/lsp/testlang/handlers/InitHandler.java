@@ -51,7 +51,7 @@ final public class InitHandler implements RequestHandler<InitializeParams, Initi
 				.withDocumentSymbolProvider(Boolean.FALSE)
 				.withWorkspaceSymbolProvider(Boolean.FALSE)
 				.withReferencesProvider(Boolean.FALSE)
-				.withDocumentHighlightProvider(Boolean.FALSE)
+				.withDocumentHighlightProvider(Boolean.TRUE)
 				.withDocumentFormattingProvider(Boolean.FALSE)
 				.withDocumentRangeFormattingProvider(Boolean.FALSE)
 				.withCodeLensProvider(new CodeLensOptions().withResolveProvider(Boolean.FALSE))

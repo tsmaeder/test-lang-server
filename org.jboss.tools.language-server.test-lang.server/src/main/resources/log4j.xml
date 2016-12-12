@@ -21,7 +21,7 @@
 	</appender>
 	
 	<logger name="org.jboss.tools">
-		<level value="DEBUG" />
+		<level value="trace" />
 	</logger>
 
 	<root>

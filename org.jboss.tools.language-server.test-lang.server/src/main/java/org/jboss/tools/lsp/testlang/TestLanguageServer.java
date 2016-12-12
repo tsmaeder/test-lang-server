@@ -14,6 +14,7 @@ import org.jboss.tools.lsp.ipc.RequestHandler;
 import org.jboss.tools.lsp.ipc.ServiceStatus;
 import org.jboss.tools.lsp.messages.LogMessageParams;
 import org.jboss.tools.lsp.messages.ShowMessageParams;
+import org.jboss.tools.lsp.testlang.handlers.DocumentHighlightHandler;
 import org.jboss.tools.lsp.testlang.handlers.DocumentSavedHandler;
 import org.jboss.tools.lsp.testlang.handlers.ExitHandler;
 import org.jboss.tools.lsp.testlang.handlers.InitHandler;
@@ -118,6 +119,7 @@ public class TestLanguageServer extends LSPServer {
 				handlers.add(new ExitHandler());
 				handlers.add(new InitHandler(this));
 				handlers.add(new DocumentSavedHandler(this));
+				handlers.add(new DocumentHighlightHandler(this));
 				connect(handlers);
 			} catch (IOException e) {
 				LOGGER.error("Failed to start 'test' language server", e);

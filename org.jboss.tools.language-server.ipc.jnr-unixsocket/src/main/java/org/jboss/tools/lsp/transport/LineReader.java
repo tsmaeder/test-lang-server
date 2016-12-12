@@ -66,7 +66,7 @@ class LineReader {
 	public int read(final ByteBuffer targetBuffer, final int position, final int remaining) throws IOException {
 		if (!this.buffer.hasRemaining()) {
 			this.buffer.clear();
-			LOGGER.debug("No remaining data avaiable. Reading again from the underlying channel...");
+			LOGGER.debug("No remaining data available. Reading again from the underlying channel...");
 			final int bytesRead = this.channel.read(buffer);
 			buffer.flip();
 			if(bytesRead == -1) {

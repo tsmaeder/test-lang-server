@@ -23,14 +23,14 @@ public class Position {
      */
     @SerializedName("line")
     @Expose
-    private Double line;
+    private Integer line;
     /**
      * Character offset on a line in a document (zero-based).
      * 
      */
     @SerializedName("character")
     @Expose
-    private Double character;
+    private Integer character;
 
     /**
      * Line position in a document (zero-based).
@@ -38,7 +38,7 @@ public class Position {
      * @return
      *     The line
      */
-    public Double getLine() {
+    public Integer getLine() {
         return line;
     }
 
@@ -48,17 +48,17 @@ public class Position {
      * @param line
      *     The line
      */
-    public void setLine(Double line) {
+    public void setLine(Integer line) {
         this.line = line;
     }
 
-    public Position withLine(Double line) {
+    public Position withLine(Integer line) {
         this.line = line;
         return this;
     }
 
     public Position withLine(int line) {
-    	return withLine(new Double(line));
+    	return withLine(new Integer(line));
     }
     
     /**
@@ -67,7 +67,7 @@ public class Position {
      * @return
      *     The character
      */
-    public Double getCharacter() {
+    public Integer getCharacter() {
         return character;
     }
 
@@ -77,17 +77,54 @@ public class Position {
      * @param character
      *     The character
      */
-    public void setCharacter(Double character) {
+    public void setCharacter(Integer character) {
         this.character = character;
     }
 
-    public Position withCharacter(Double character) {
+    public Position withCharacter(Integer character) {
         this.character = character;
         return this;
     }
 
     public Position withCharacter(int character) {
-    	return withCharacter(new Double(character));
+    	return withCharacter(new Integer(character));
     }
 
+	@Override
+	public String toString() {
+		return "Position [line=" + line + ", character=" + character + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((character == null) ? 0 : character.hashCode());
+		result = prime * result + ((line == null) ? 0 : line.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Position other = (Position) obj;
+		if (character == null) {
+			if (other.character != null)
+				return false;
+		} else if (!character.equals(other.character))
+			return false;
+		if (line == null) {
+			if (other.line != null)
+				return false;
+		} else if (!line.equals(other.line))
+			return false;
+		return true;
+	}
+
+    
 }
