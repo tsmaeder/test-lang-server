@@ -19,9 +19,9 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
-import org.jboss.tools.lsp.ipc.MessageType;
-import org.jboss.tools.lsp.messages.DidSaveTextDocumentParams;
-import org.jboss.tools.lsp.messages.TextDocumentIdentifier;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.jboss.tools.lsp.testlang.DocumentManager;
 import org.jboss.tools.lsp.testlang.TestLanguageServer;
 import org.junit.Test;
@@ -39,13 +39,12 @@ public class DocumentSavedHandlerTest {
 		final TestLanguageServer testLanguageServer = Mockito.mock(TestLanguageServer.class);
 		final DocumentManager documentManager = Mockito.mock(DocumentManager.class);
 		Mockito.when(documentManager.getContent("file:///foo.test"))
-				.thenReturn(Arrays.asList("Foo", "window/showMessage:error: a message"));
+				.thenReturn(Arrays.asList("Foo", "window/showMessage:Error: a message"));
 		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
-		final DocumentSavedHandler documentSavedHandler = new DocumentSavedHandler(testLanguageServer);
-		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams()
-				.withTextDocument(new TextDocumentIdentifier().withUri("file:///foo.test"));
+		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"));
 		// when
-		documentSavedHandler.handle(didSaveTextDocumentParams);
+		service.didSave(didSaveTextDocumentParams);
 		// then
 		Mockito.verify(testLanguageServer, Mockito.times(1)).sendShowMessageNotification(MessageType.Error,
 				"a message");
@@ -59,11 +58,10 @@ public class DocumentSavedHandlerTest {
 		Mockito.when(documentManager.getContent("file:///foo.test"))
 				.thenReturn(Arrays.asList("Foo", "window/showMessage: a message"));
 		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
-		final DocumentSavedHandler documentSavedHandler = new DocumentSavedHandler(testLanguageServer);
-		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams()
-				.withTextDocument(new TextDocumentIdentifier().withUri("file:///foo.test"));
+		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"));
 		// when
-		documentSavedHandler.handle(didSaveTextDocumentParams);
+		service.didSave(didSaveTextDocumentParams);
 		// then
 		Mockito.verify(testLanguageServer, Mockito.times(0)).sendShowMessageNotification(ArgumentMatchers.any(),
 				ArgumentMatchers.any());
@@ -74,7 +72,7 @@ public class DocumentSavedHandlerTest {
 		// given
 		final String value = "window/showMessage:error:a message";
 		// when
-		final Matcher matcher = DocumentSavedHandler.showMessagePattern.matcher(value);
+		final Matcher matcher = TestTextDocumentService.showMessagePattern.matcher(value);
 		// then
 		assertThat(matcher.matches()).isTrue();
 		assertThat(matcher.group(1)).isEqualTo("error");
@@ -86,7 +84,7 @@ public class DocumentSavedHandlerTest {
 		// given
 		Stream.of("window/show", "window/showMessage", "window/showMessage:", "window/showMessage:error", "window/showMessage:error:").forEach(value -> {
 			// when
-			final Matcher matcher = DocumentSavedHandler.showMessagePattern.matcher(value);
+			final Matcher matcher = TestTextDocumentService.showMessagePattern.matcher(value);
 			// then
 			assertThat(matcher.matches()).as(value).isFalse();
 		});

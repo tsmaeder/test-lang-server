@@ -24,16 +24,11 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
 public class TestLanguageServerTest {
-
-	/** The usual Logger. */
-	private static final Logger LOGGER = LoggerFactory.getLogger(TestLanguageServerTest.class);
 
 	@Rule
 	public FakeTestLangClient fakeClient = new FakeTestLangClient(
@@ -43,14 +38,15 @@ public class TestLanguageServerTest {
 	@Test
 	public void shouldRespondToInitRequest() throws IOException, InterruptedException, ExecutionException {
 		// given a test lang server
-		final TestLanguageServer testLangServer = new TestLanguageServer();
-		testLangServer.start();
+		System.out.println("starting server");
+		new TestLanguageServer().start();
+		System.out.println("waiting for connections");
 		fakeClient.waitForConnections();
 		// when
+		fakeClient.expectMessages("initialize", "language/status", "language/status");
 		fakeClient.sendInitializeRequest();
 		// then expect to received a message notification before the timeout
-		fakeClient.waitforResponses(TimeUnit.SECONDS.toMillis(600), "language/status", "language/status");
-		assertTrue("Did not receive all messages", fakeClient.verifyMessages());
+		assertTrue("Did not receive all messages", fakeClient.waitForMessages(TimeUnit.SECONDS.toMillis(600)));
 	}
 
 	@Test
@@ -58,21 +54,20 @@ public class TestLanguageServerTest {
 			throws IOException, InterruptedException, ExecutionException, URISyntaxException {
 		// given a test lang server with a mock'd DocumentManager
 		final DocumentManager mockDocumentManager = Mockito.mock(DocumentManager.class);
-		final List<String> docLines = Arrays.asList("foo and bar", "window/showMessage:error:a message to show");
+		final List<String> docLines = Arrays.asList("foo and bar", "window/showMessage:Error:a message to show");
 		Mockito.when(mockDocumentManager.getContent("file:///path/to/file")).thenReturn(docLines);
-		final TestLanguageServer testLangServer = new TestLanguageServer(mockDocumentManager);
-		testLangServer.start();
+		new TestLanguageServer(mockDocumentManager).start();
 		fakeClient.waitForConnections();
 		// when
+		fakeClient.expectMessages("language/status", "language/status");
 		fakeClient.sendInitializeRequest();
-		fakeClient.waitforResponses(TimeUnit.SECONDS.toMillis(600), "language/status", "language/status");
+		assertTrue("Did not receive all messages", fakeClient.waitForMessages(TimeUnit.SECONDS.toMillis(600)));
 		// when sending a 'didSave' notification with a line containing the
 		// 'ERROR' keyword
+		fakeClient.expectMessages("window/showMessage");
 		fakeClient.sendDidSaveNotification("file:///path/to/file");
 		// then expect to received a message notification before the timeout
-		fakeClient.waitforResponses(TimeUnit.SECONDS.toMillis(600), "language/status", "language/status",
-				"window/showMessage");
-		assertTrue("Did not receive all messages", fakeClient.verifyMessages());
+		assertTrue("Did not receive all messages", fakeClient.waitForMessages(TimeUnit.SECONDS.toMillis(600)));
 	}
 
 }

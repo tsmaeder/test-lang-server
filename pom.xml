@@ -7,9 +7,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>org.jboss.tools.language-server.messages</module>
-    <!-- <module>org.jboss.tools.language-server.ipc.junixsocket/</module> -->
-    <module>org.jboss.tools.language-server.ipc.jnr-unixsocket</module>
     <module>org.jboss.tools.language-server.test-lang.server</module>
   </modules>
 </project>
