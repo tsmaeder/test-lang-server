@@ -39,10 +39,10 @@ public class DocumentSavedHandlerTest {
 		final TestLanguageServer testLanguageServer = Mockito.mock(TestLanguageServer.class);
 		final DocumentManager documentManager = Mockito.mock(DocumentManager.class);
 		Mockito.when(documentManager.getContent("file:///foo.test"))
-				.thenReturn(Arrays.asList("Foo", "window/showMessage:Error: a message"));
+				.thenReturn(Arrays.asList("Foo", "window/showMessageNotification:Error: a message"));
 		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
 		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
-		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"));
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"), null);
 		// when
 		service.didSave(didSaveTextDocumentParams);
 		// then
@@ -51,15 +51,33 @@ public class DocumentSavedHandlerTest {
 	}
 
 	@Test
+	public void shouldSendMessageRequest() throws IOException, URISyntaxException {
+		// given
+		final TestLanguageServer testLanguageServer = Mockito.mock(TestLanguageServer.class);
+		final DocumentManager documentManager = Mockito.mock(DocumentManager.class);
+		Mockito.when(documentManager.getContent("file:///foo.test"))
+				.thenReturn(Arrays.asList("Foo", "window/showMessageRequest:Error:Command: a message"));
+		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
+		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"), null);
+		// when
+		service.didSave(didSaveTextDocumentParams);
+		// then
+		Mockito.verify(testLanguageServer, Mockito.times(1)).sendShowMessageRequest(MessageType.Error,
+				"a message", "Command");
+	}
+
+	
+	@Test
 	public void shouldNotMessageToShowWhenMissingType() throws IOException, URISyntaxException {
 		// given
 		final TestLanguageServer testLanguageServer = Mockito.mock(TestLanguageServer.class);
 		final DocumentManager documentManager = Mockito.mock(DocumentManager.class);
 		Mockito.when(documentManager.getContent("file:///foo.test"))
-				.thenReturn(Arrays.asList("Foo", "window/showMessage: a message"));
+				.thenReturn(Arrays.asList("Foo", "window/showMessageNotification: a message"));
 		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
 		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
-		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"));
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"), null);
 		// when
 		service.didSave(didSaveTextDocumentParams);
 		// then
@@ -70,7 +88,7 @@ public class DocumentSavedHandlerTest {
 	@Test
 	public void shouldMatchPattern() {
 		// given
-		final String value = "window/showMessage:error:a message";
+		final String value = "window/showMessageNotification:error:a message";
 		// when
 		final Matcher matcher = TestTextDocumentService.showMessagePattern.matcher(value);
 		// then
@@ -82,7 +100,7 @@ public class DocumentSavedHandlerTest {
 	@Test
 	public void shouldNotMatchPattern() {
 		// given
-		Stream.of("window/show", "window/showMessage", "window/showMessage:", "window/showMessage:error", "window/showMessage:error:").forEach(value -> {
+		Stream.of("window/show", "window/showMessageNotification", "window/showMessageNotification:", "window/showMessageNotification:error", "window/showMessageNotification:error:").forEach(value -> {
 			// when
 			final Matcher matcher = TestTextDocumentService.showMessagePattern.matcher(value);
 			// then

@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
@@ -263,7 +264,7 @@ public class FakeTestLangClient extends ExternalResource implements ExtendedLang
 	}
 
 	@Override
-	public CompletableFuture<Void> showMessageRequest(ShowMessageRequestParams requestParams) {
+	public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams requestParams) {
 		// TODO Auto-generated method stub
 		return null;
 	}

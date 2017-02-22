@@ -18,22 +18,22 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Interface for the Document manager
- */
-public interface DocumentManager {
+import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.jboss.tools.lsp.testlang.handlers.TestTextDocumentService;
 
-	/**
-	 * Returns the content of the document at the given {@code uri}.
-	 * 
-	 * @param path
-	 *            the document URI.
-	 * @return the document content as a list of lines
-	 * @throws IOException
-	 * @throws URISyntaxException 
-	 */
-	public default List<String> getContent(String path) throws IOException, URISyntaxException {
+/**
+ * Default implementation of the {@link DocumentManager} interface.
+ */
+public class DocumentManager {
+	public List<String> getContent(String path) throws IOException, URISyntaxException {
 		return Files.readAllLines(Paths.get(new URI(path)));
+	}
+
+	public String getWordAtPosition(TextDocumentPositionParams location) throws IOException, URISyntaxException {
+		final List<String> lines = getContent(location.getTextDocument().getUri());
+		final String selectedLine = lines.get(location.getPosition().getLine());
+		// find the selected word
+		return TestTextDocumentService.findSelectedWord(location.getPosition().getCharacter(), selectedLine);
 	}
 
 }

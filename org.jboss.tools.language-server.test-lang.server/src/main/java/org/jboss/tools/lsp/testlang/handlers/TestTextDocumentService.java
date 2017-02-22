@@ -13,6 +13,8 @@ package org.jboss.tools.lsp.testlang.handlers;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -49,6 +51,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jboss.tools.lsp.testlang.DocumentManager;
 import org.jboss.tools.lsp.testlang.TestLanguageServer;
@@ -62,50 +65,88 @@ import org.slf4j.LoggerFactory;
  */
 public class TestTextDocumentService implements TextDocumentService {
 
+	private final AbstractCommand[] commands = new AbstractCommand[] {
+	    new AbstractCommand("window/showMessageNotification:(?<type>\\w+):(?<message>.+)") {
+			
+			@Override
+			public void execute(String[] groups) {
+				final MessageType type = MessageType.valueOf(groups[0]);
+				final String message = groups[1].trim();
+				LOGGER.info("Found line starting with 'window/showMessageNotification' keyword:\n{} (type={})", message,
+						type.toString().toLowerCase());
+				testLanguageServer.sendShowMessageNotification(type, message);
+			}
+		},
+	    
+	    new AbstractCommand("window/showMessageRequest:(?<type>\\w+):(?<command>\\w+):(?<message>.+)") {
+			
+			@Override
+			public void execute(String[] groups) {
+				final MessageType type = MessageType.valueOf(groups[0]);
+				final String message = groups[2].trim();
+				LOGGER.info("Found line starting with 'window/showMessageRequest' keyword:\n{} (type={})", message,
+						type.toString().toLowerCase());
+				testLanguageServer.sendShowMessageRequest(type, message, groups[1]);
+			}
+		}
+
+	};
+	
 	protected static final Pattern showMessagePattern = Pattern
-			.compile("window/showMessage:(?<type>\\w+):(?<message>.+)");
+			.compile("window/showMessageNotification:(?<type>\\w+):(?<message>.+)");
 	/** The usual Logger. */
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestTextDocumentService.class);
 	private final TestLanguageServer testLanguageServer;
 
+	
 	public TestTextDocumentService(TestLanguageServer testLanguageServer) {
 		this.testLanguageServer = testLanguageServer;
 	}
 
 	@Override
-	public CompletableFuture<CompletionList> completion(TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+	public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(TextDocumentPositionParams position) {
+		List<CompletionItem> items= new ArrayList<>();
+		for (int i= 0; i < 6; i++) {
+			items.add(createCompletionItem("TestItem "+i));
+		}
+		
+		
+		return CompletableFuture.completedFuture(Either.forLeft(items));
+	}
+
+	private CompletionItem createCompletionItem(String itemText) {
+		CompletionItem i= new CompletionItem();
+		i.setDetail(itemText+" Detail");
+		i.setInsertText(itemText);
+		i.setLabel("Label for "+itemText);
+		i.setCommand(new Command("TestCommand"+itemText, "TestCommand", Arrays.asList(itemText)));
+		return i;
 	}
 
 	@Override
 	public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(createCompletionItem(unresolved.getInsertText()+" resolved"));
 	}
 
 	@Override
 	public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+		Range range = new Range(position.getPosition(), new Position(position.getPosition().getLine(), position.getPosition().getCharacter()+1));
+		return CompletableFuture.completedFuture(new Hover(Arrays.asList(Either.forLeft("First element"), Either.forLeft("Second element")), range));
 	}
 
 	@Override
 	public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
 	public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
@@ -177,50 +218,42 @@ public class TestTextDocumentService implements TextDocumentService {
 
 	@Override
 	public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
 	public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	@Override
 	public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
@@ -231,14 +264,10 @@ public class TestTextDocumentService implements TextDocumentService {
 
 	@Override
 	public void didChange(DidChangeTextDocumentParams params) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void didClose(DidCloseTextDocumentParams params) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -249,15 +278,13 @@ public class TestTextDocumentService implements TextDocumentService {
 		try {
 			final List<String> lines = documentManager.getContent(documentUri);
 			LOGGER.info("Document saved: \n{}", lines.stream().collect(Collectors.joining("\n")));
-			// iterate on lines with a counter
-			lines.stream().map(line -> showMessagePattern.matcher(line)).filter(matcher -> matcher.matches())
-					.forEach(matcher -> {
-						final MessageType type = MessageType.valueOf(matcher.group(1));
-						final String message = matcher.group(2).trim();
-						LOGGER.info("Found line starting with 'window/showMessage' keyword:\n{} (type={})", message,
-								type.toString().toLowerCase());
-						this.testLanguageServer.sendShowMessageNotification(type, message);
-					});
+			for (String line : lines) {
+				for (AbstractCommand command : commands) {
+					if (command.maybeExecute(line)) {
+						break;
+					}
+				}
+			}
 		} catch (IOException | URISyntaxException e) {
 			LOGGER.error("Failed to read document content at " + documentUri, e);
 		}

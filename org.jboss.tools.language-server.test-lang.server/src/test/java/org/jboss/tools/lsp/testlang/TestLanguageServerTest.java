@@ -54,7 +54,7 @@ public class TestLanguageServerTest {
 			throws IOException, InterruptedException, ExecutionException, URISyntaxException {
 		// given a test lang server with a mock'd DocumentManager
 		final DocumentManager mockDocumentManager = Mockito.mock(DocumentManager.class);
-		final List<String> docLines = Arrays.asList("foo and bar", "window/showMessage:Error:a message to show");
+		final List<String> docLines = Arrays.asList("foo and bar", "window/showMessageNotification:Error:a message to show");
 		Mockito.when(mockDocumentManager.getContent("file:///path/to/file")).thenReturn(docLines);
 		new TestLanguageServer(mockDocumentManager).start();
 		fakeClient.waitForConnections();

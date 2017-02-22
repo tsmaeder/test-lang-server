@@ -12,6 +12,7 @@ package org.jboss.tools.lsp.testlang;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -19,11 +20,14 @@ import java.util.concurrent.Future;
 
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -33,6 +37,7 @@ import org.jboss.tools.lsp.ext.ExtendedLanguageClient;
 import org.jboss.tools.lsp.ext.ServiceStatus;
 import org.jboss.tools.lsp.ext.StatusReport;
 import org.jboss.tools.lsp.testlang.handlers.TestTextDocumentService;
+import org.jboss.tools.lsp.testlang.handlers.TestWorkspaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +53,7 @@ public class TestLanguageServer implements LanguageServer {
 
 	private final DocumentManager documentManager;
 	private final TextDocumentService textDocumentService;
+	private final WorkspaceService workspaceService;
 
 	private ExtendedLanguageClient languageClient;
 
@@ -88,7 +94,7 @@ public class TestLanguageServer implements LanguageServer {
 	 * Default constructor.
 	 */
 	public TestLanguageServer() {
-		this(new DefaultDocumentManager());
+		this(new DocumentManager());
 	}
 
 	/**
@@ -100,6 +106,7 @@ public class TestLanguageServer implements LanguageServer {
 	public TestLanguageServer(final DocumentManager documentManager) {
 		this.documentManager = documentManager;
 		this.textDocumentService= new TestTextDocumentService(this);
+		this.workspaceService= new TestWorkspaceService();
 	}
 
 	/**
@@ -135,6 +142,11 @@ public class TestLanguageServer implements LanguageServer {
 		languageClient.showMessage(new MessageParams(type, msg));
 	}
 
+	public CompletableFuture<MessageActionItem> sendShowMessageRequest(final MessageType type, final String msg, String command) {
+		return languageClient.showMessageRequest(new ShowMessageRequestParams(Arrays.asList(new MessageActionItem(command))));
+	}
+
+	
 	public void sendStatus(final ServiceStatus serverStatus, final String status) {
 		languageClient.statusEvent(new StatusReport(serverStatus, status));
 	}
@@ -145,7 +157,7 @@ public class TestLanguageServer implements LanguageServer {
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-		triggerInitialization(params.getRootPath());
+		triggerInitialization(params.getRootUri());
 		final InitializeResult result = new InitializeResult();
 		final ServerCapabilities capabilities = new ServerCapabilities();
 		capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
@@ -158,6 +170,8 @@ public class TestLanguageServer implements LanguageServer {
 		capabilities.setDocumentFormattingProvider(Boolean.FALSE);
 		capabilities.setDocumentRangeFormattingProvider(Boolean.FALSE);
 		capabilities.setCodeLensProvider(new CodeLensOptions(Boolean.FALSE));
+		
+		capabilities.setExecuteCommandProvider(new ExecuteCommandOptions(Arrays.asList("TestCommand")));
 
 		result.setCapabilities(capabilities);
 		return CompletableFuture.completedFuture(result);
@@ -193,8 +207,7 @@ public class TestLanguageServer implements LanguageServer {
 
 	@Override
 	public WorkspaceService getWorkspaceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return workspaceService;
 	}
 
 }

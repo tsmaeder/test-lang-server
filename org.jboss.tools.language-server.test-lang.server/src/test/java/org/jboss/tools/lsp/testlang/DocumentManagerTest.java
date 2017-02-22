@@ -18,7 +18,7 @@ public class DocumentManagerTest {
 		// given
 		final String fileLocation = "file://" + Thread.currentThread().getContextClassLoader().getResource("foo.test").getFile();
 		// when
-		final List<String> content = new DefaultDocumentManager().getContent(fileLocation);
+		final List<String> content = new DocumentManager().getContent(fileLocation);
 		// then
 		assertThat(content).contains("ERROR");
 	}
