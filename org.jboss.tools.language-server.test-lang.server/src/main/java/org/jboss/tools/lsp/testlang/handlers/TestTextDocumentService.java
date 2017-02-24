@@ -28,6 +28,8 @@ import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -69,7 +71,7 @@ public class TestTextDocumentService implements TextDocumentService {
 	    new AbstractCommand("window/showMessageNotification:(?<type>\\w+):(?<message>.+)") {
 			
 			@Override
-			public void execute(String[] groups) {
+			public void execute(String[] groups, TextDocumentIdentifier document) {
 				final MessageType type = MessageType.valueOf(groups[0]);
 				final String message = groups[1].trim();
 				LOGGER.info("Found line starting with 'window/showMessageNotification' keyword:\n{} (type={})", message,
@@ -81,14 +83,57 @@ public class TestTextDocumentService implements TextDocumentService {
 	    new AbstractCommand("window/showMessageRequest:(?<type>\\w+):(?<command>\\w+):(?<message>.+)") {
 			
 			@Override
-			public void execute(String[] groups) {
+			public void execute(String[] groups, TextDocumentIdentifier document) {
 				final MessageType type = MessageType.valueOf(groups[0]);
 				final String message = groups[2].trim();
 				LOGGER.info("Found line starting with 'window/showMessageRequest' keyword:\n{} (type={})", message,
 						type.toString().toLowerCase());
 				testLanguageServer.sendShowMessageRequest(type, message, groups[1]);
 			}
-		}
+		},
+
+	    new AbstractCommand("textDocument/badWord:(?<type>\\w+):(?<word>.+):(?<message>.+)") {
+			
+			@Override
+			public void execute(String[] groups, TextDocumentIdentifier document) {
+				final DiagnosticSeverity severity = DiagnosticSeverity.valueOf(groups[0]);
+				final String message = groups[2].trim();
+				LOGGER.info("Found line starting with 'textDocument/badWord' keyword:\n{} (type={})", message,
+						severity.toString().toLowerCase());
+				
+				
+				List<Diagnostic> diagnostics= new ArrayList<>();
+				try {
+					List<String> content = testLanguageServer.getDocumentManager().getContent(document.getUri());
+					int l= 0;
+					for (String line : content) {
+						int c= 0;
+						while(c < line.length()) {
+							int start = line.indexOf(groups[1], c);
+							if (start >= 0) {
+								diagnostics.add(createDiagnostic(DiagnosticSeverity.Error, l, start, groups[1].length(), message));
+								c= start+groups[1].length();
+							} else {
+								break;
+							}
+						}
+						l++;
+					}
+				} catch (IOException | URISyntaxException e) {
+					diagnostics.add(createDiagnostic(DiagnosticSeverity.Error, 0, 0, 0, "Could not compute diagnostics"));
+				}
+				
+				testLanguageServer.publishDiagnostics(document.getUri(), diagnostics);
+			}
+
+			private Diagnostic createDiagnostic(DiagnosticSeverity severity, int line, int start, int length, String message) {
+				Diagnostic diagnostic = new Diagnostic();
+				diagnostic.setSeverity(severity);
+				diagnostic.setRange(new Range(new Position(line, start), new Position(line, start+length)));
+				diagnostic.setMessage(message);
+				return diagnostic;
+			}
+		},
 
 	};
 	
@@ -280,7 +325,7 @@ public class TestTextDocumentService implements TextDocumentService {
 			LOGGER.info("Document saved: \n{}", lines.stream().collect(Collectors.joining("\n")));
 			for (String line : lines) {
 				for (AbstractCommand command : commands) {
-					if (command.maybeExecute(line)) {
+					if (command.maybeExecute(params.getTextDocument(), line)) {
 						break;
 					}
 				}

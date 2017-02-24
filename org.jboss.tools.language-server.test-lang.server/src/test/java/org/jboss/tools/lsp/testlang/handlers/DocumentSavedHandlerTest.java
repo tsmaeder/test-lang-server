@@ -67,6 +67,23 @@ public class DocumentSavedHandlerTest {
 				"a message", "Command");
 	}
 
+	@Test
+	public void shouldPublishDiagnostics() throws IOException, URISyntaxException {
+		// given
+		final TestLanguageServer testLanguageServer = Mockito.mock(TestLanguageServer.class);
+		final DocumentManager documentManager = Mockito.mock(DocumentManager.class);
+		Mockito.when(documentManager.getContent("file:///foo.test"))
+				.thenReturn(Arrays.asList("Foo", "textDocument/badWord:Error:message: a message"));
+		Mockito.when(testLanguageServer.getDocumentManager()).thenReturn(documentManager);
+		final TestTextDocumentService service = new TestTextDocumentService(testLanguageServer);
+		final DidSaveTextDocumentParams didSaveTextDocumentParams = new DidSaveTextDocumentParams(new TextDocumentIdentifier("file:///foo.test"), null);
+		// when
+		service.didSave(didSaveTextDocumentParams);
+		// then
+		Mockito.verify(testLanguageServer, Mockito.times(1)).publishDiagnostics(ArgumentMatchers.startsWith("file:///foo.test"),
+				ArgumentMatchers.any());
+	}
+	
 	
 	@Test
 	public void shouldNotMessageToShowWhenMissingType() throws IOException, URISyntaxException {

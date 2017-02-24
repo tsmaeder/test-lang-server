@@ -14,18 +14,21 @@ import java.io.IOException;
 import java.nio.channels.Channels;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -144,6 +147,10 @@ public class TestLanguageServer implements LanguageServer {
 
 	public CompletableFuture<MessageActionItem> sendShowMessageRequest(final MessageType type, final String msg, String command) {
 		return languageClient.showMessageRequest(new ShowMessageRequestParams(Arrays.asList(new MessageActionItem(command))));
+	}
+
+	public void publishDiagnostics(String uri, List<Diagnostic> diagnostics) {
+		languageClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
 	}
 
 	
