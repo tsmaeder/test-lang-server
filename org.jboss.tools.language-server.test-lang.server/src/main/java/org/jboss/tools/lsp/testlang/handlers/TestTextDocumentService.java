@@ -236,29 +236,21 @@ public class TestTextDocumentService implements TextDocumentService {
 	}
 
 	public static String findSelectedWord(final int selectionPosition, final String selectedLine) {
-		// move backward until non alphabetic character is found, or begin of
-		// line is reached
-		int currentPosition = selectionPosition;
-		while (currentPosition > 0 && Character.isAlphabetic(selectedLine.charAt(currentPosition))) {
-			LOGGER.trace("Character ''{}'' (position {}) is alphabetic: {}", selectedLine.charAt(currentPosition),
-					currentPosition, Character.isAlphabetic(selectedLine.charAt(currentPosition)));
-			currentPosition--;
+		LOGGER.debug("Looking for word at Position {} in '{}'", selectionPosition, selectedLine);
+		
+		int firstChar= selectionPosition;
+		while (firstChar > 0 && Character.isAlphabetic(selectedLine.charAt(firstChar-1))) {
+			firstChar--;
 		}
-		final int beginPosition = currentPosition < 0 || !Character.isAlphabetic(selectedLine.charAt(currentPosition))
-				? currentPosition + 1 : currentPosition;
-		// move forward until non alphabetic character is found, or end of line
-		// is reached
-		currentPosition = selectionPosition;
-		while (currentPosition < selectedLine.length()
-				&& Character.isAlphabetic(selectedLine.charAt(currentPosition))) {
-			LOGGER.trace("Character ''{}'' (position {}) is alphabetic: {}", selectedLine.charAt(currentPosition),
-					currentPosition, Character.isAlphabetic(selectedLine.charAt(currentPosition)));
-			currentPosition++;
+		LOGGER.debug("First char: {}", firstChar);
+		int afterLastChar= selectionPosition;
+		while (afterLastChar < selectedLine.length() && Character.isAlphabetic(selectedLine.charAt(afterLastChar))) {
+			afterLastChar++;
 		}
-		final int endPosition = currentPosition;
-		final String result = selectedLine.substring(beginPosition, endPosition);
-		LOGGER.trace("Result: ''{}'' (position {}-{})", result, beginPosition, endPosition);
-		return result;
+		LOGGER.debug("After last char: {}", afterLastChar);
+		String word = selectedLine.substring(firstChar, afterLastChar);
+		LOGGER.debug("Found word: {}", word);
+		return word;
 	}
 
 	@Override

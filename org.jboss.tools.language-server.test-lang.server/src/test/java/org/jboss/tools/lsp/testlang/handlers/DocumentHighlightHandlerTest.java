@@ -18,6 +18,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.jboss.tools.lsp.testlang.DocumentManager;
 import org.jboss.tools.lsp.testlang.TestLanguageServer;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -81,5 +82,18 @@ public class DocumentHighlightHandlerTest {
 		assertThat(result.contains(
 				new DocumentHighlight(new Range(new Position(1, 0), new Position(1, 2)), DocumentHighlightKind.Text)));
 
+	}
+	
+	@Test
+	public void testFindSelectedWord() {
+		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(0, ""));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(1, " Foo "));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(4, " Foo "));
+		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(0, " Foo "));
+		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(5, " Foo "));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(3, "Foo"));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(0, "Foo"));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(0, "Foo "));
+		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(4, " Foo"));
 	}
 }
