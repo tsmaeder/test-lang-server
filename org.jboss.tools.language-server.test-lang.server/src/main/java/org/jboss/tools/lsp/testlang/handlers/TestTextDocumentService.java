@@ -111,7 +111,7 @@ public class TestTextDocumentService implements TextDocumentService {
 						while(c < line.length()) {
 							int start = line.indexOf(groups[1], c);
 							if (start >= 0) {
-								diagnostics.add(createDiagnostic(DiagnosticSeverity.Error, l, start, groups[1].length(), message));
+								diagnostics.add(createDiagnostic(severity, l, start, groups[1].length(), message));
 								c= start+groups[1].length();
 							} else {
 								break;
@@ -156,7 +156,7 @@ public class TestTextDocumentService implements TextDocumentService {
 		}
 		
 		
-		return CompletableFuture.completedFuture(Either.forLeft(items));
+		return CompletableFuture.completedFuture(Either.forRight(new CompletionList(false, items)));
 	}
 
 	private CompletionItem createCompletionItem(String itemText) {
@@ -260,7 +260,13 @@ public class TestTextDocumentService implements TextDocumentService {
 
 	@Override
 	public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params) {
-		return CompletableFuture.completedFuture(Collections.emptyList());
+		LOGGER.info("Handling coda action request: " + params);
+		boolean hasDiagnostic = params.getContext().getDiagnostics().isEmpty();
+		return CompletableFuture.completedFuture(Arrays.asList(
+						new Command("A quick fix ("+hasDiagnostic+")", "lsp.applyTextEdit", Arrays.asList(new TextEdit(new Range(new Position(0,  0), new Position(0,  0)), "foobar"))),
+						new Command("A second fix", "lsp.applyWorkspaceEdit", Arrays.asList(new TextEdit(new Range(new Position(0,  0), new Position(0,  0)), "blabla")))
+
+		));
 	}
 
 	@Override

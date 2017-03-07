@@ -169,14 +169,15 @@ public class TestLanguageServer implements LanguageServer {
 		final ServerCapabilities capabilities = new ServerCapabilities();
 		capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
 		capabilities.setCompletionProvider(new CompletionOptions(false, Collections.emptyList()));
-		capabilities.setHoverProvider(Boolean.FALSE);
+		capabilities.setHoverProvider(Boolean.TRUE);
 		capabilities.setDocumentSymbolProvider(Boolean.FALSE);
 		capabilities.setWorkspaceSymbolProvider(Boolean.FALSE);
 		capabilities.setReferencesProvider(Boolean.FALSE);
-		capabilities.setDocumentHighlightProvider(Boolean.TRUE);
+		capabilities.setDocumentHighlightProvider(Boolean.FALSE);
 		capabilities.setDocumentFormattingProvider(Boolean.FALSE);
 		capabilities.setDocumentRangeFormattingProvider(Boolean.FALSE);
 		capabilities.setCodeLensProvider(new CodeLensOptions(Boolean.FALSE));
+		capabilities.setCodeActionProvider(Boolean.TRUE);
 		
 		capabilities.setExecuteCommandProvider(new ExecuteCommandOptions(Arrays.asList("TestCommand")));
 
