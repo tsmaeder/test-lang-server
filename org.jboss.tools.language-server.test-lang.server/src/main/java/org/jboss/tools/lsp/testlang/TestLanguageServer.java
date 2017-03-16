@@ -76,7 +76,7 @@ public class TestLanguageServer implements LanguageServer {
 	 */
 	public static void main(String[] args) throws InterruptedException, IOException, ExecutionException {
 		new TestLanguageServer().start().get();
-	}
+	} 
 
 	public Future<?> start() throws IOException {
 		final String stdInName = Utils.getEnvVarOrSysProp(STDIN_PIPE_NAME);
@@ -162,9 +162,14 @@ public class TestLanguageServer implements LanguageServer {
 		this.languageClient = client;
 	}
 
-	@Override
+	@SuppressWarnings("deprecation")
+    @Override
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-		triggerInitialization(params.getRootUri());
+		String rootUri = params.getRootUri();
+		if (rootUri == null) {
+		    rootUri= params.getRootPath();
+		}
+        triggerInitialization(rootUri);
 		final InitializeResult result = new InitializeResult();
 		final ServerCapabilities capabilities = new ServerCapabilities();
 		capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
