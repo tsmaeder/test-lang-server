@@ -39,7 +39,7 @@ public class DocumentHighlightHandlerTest {
 		final int[] positions = { 1, 1, 0, 4, 8 };
 		// when
 		final List<String> result = IntStream.range(0, 5)
-				.mapToObj(i -> TestTextDocumentService.findSelectedWord(positions[i], lines.get(i)))
+				.mapToObj(i -> DocumentManager.findSelectedWord(positions[i], lines.get(i)))
 				.collect(Collectors.toList());
 		// then
 		LOGGER.debug("Result: {}", result.stream().map(r -> "'" + r + "'").collect(Collectors.joining(", ")));
@@ -86,14 +86,14 @@ public class DocumentHighlightHandlerTest {
 	
 	@Test
 	public void testFindSelectedWord() {
-		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(0, ""));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(1, " Foo "));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(4, " Foo "));
-		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(0, " Foo "));
-		Assert.assertEquals("", TestTextDocumentService.findSelectedWord(5, " Foo "));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(3, "Foo"));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(0, "Foo"));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(0, "Foo "));
-		Assert.assertEquals("Foo", TestTextDocumentService.findSelectedWord(4, " Foo"));
+		Assert.assertEquals("", DocumentManager.findSelectedWord(0, ""));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(1, " Foo "));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(4, " Foo "));
+		Assert.assertEquals("", DocumentManager.findSelectedWord(0, " Foo "));
+		Assert.assertEquals("", DocumentManager.findSelectedWord(5, " Foo "));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(3, "Foo"));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(0, "Foo"));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(0, "Foo "));
+		Assert.assertEquals("Foo", DocumentManager.findSelectedWord(4, " Foo"));
 	}
 }

@@ -11,6 +11,26 @@
 
 package org.jboss.tools.lsp.testlang;
 
+import jnr.unixsocket.UnixServerSocketChannel;
+import jnr.unixsocket.UnixSocketAddress;
+import jnr.unixsocket.UnixSocketChannel;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
+import org.eclipse.lsp4j.jsonrpc.messages.NotificationMessage;
+import org.eclipse.lsp4j.jsonrpc.messages.RequestMessage;
+import org.eclipse.lsp4j.services.LanguageServer;
+import org.jboss.tools.lsp.ext.ExtendedLanguageClient;
+import org.jboss.tools.lsp.ext.StatusReport;
+import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,28 +47,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.MessageActionItem;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
-import org.eclipse.lsp4j.ShowMessageRequestParams;
-import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
-import org.eclipse.lsp4j.jsonrpc.messages.NotificationMessage;
-import org.eclipse.lsp4j.jsonrpc.messages.RequestMessage;
-import org.eclipse.lsp4j.services.LanguageServer;
-import org.jboss.tools.lsp.ext.ExtendedLanguageClient;
-import org.jboss.tools.lsp.ext.StatusReport;
-import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jnr.unixsocket.UnixServerSocketChannel;
-import jnr.unixsocket.UnixSocketAddress;
-import jnr.unixsocket.UnixSocketChannel;
 
 /**
  * Simulates the behavior of an IDE that supports the Language Server Protocol.
@@ -264,7 +262,7 @@ public class FakeTestLangClient extends ExternalResource implements ExtendedLang
 	}
 
 	@Override
-	public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams requestParams) {
+	public CompletableFuture<Void> showMessageRequest(ShowMessageRequestParams requestParams) {
 		// TODO Auto-generated method stub
 		return null;
 	}
