@@ -11,6 +11,7 @@
 
 package org.jboss.tools.lsp.testlang;
 
+import com.google.common.io.LineReader;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -59,18 +60,23 @@ public class DocumentManager {
 
     private List<String> parse(String contents) {
         ArrayList<String> result = new ArrayList<String>();
+        StringBuilder b= new StringBuilder();
         if (contents != null) {
-            BufferedReader reader = new BufferedReader(new StringReader(contents));
-            String line;
-            try {
-                line = reader.readLine();
-                while (line != null) {
-                    result.add(line);
-                    line = reader.readLine();
+            for (int i = 0; i < contents.length(); i++) {
+                if (contents.charAt(i) == '\r') {
+                    if (contents.charAt(i+1) == '\n') {
+                        i++;
+                    }
+                    result.add(b.toString());
+                    b= new StringBuilder();
+                } else if (contents.charAt(i) == '\n') {
+                    result.add(b.toString());
+                    b= new StringBuilder();
+                } else {
+                    b.append(contents.charAt(i));
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+            result.add(b.toString());
         }
 
         return result;

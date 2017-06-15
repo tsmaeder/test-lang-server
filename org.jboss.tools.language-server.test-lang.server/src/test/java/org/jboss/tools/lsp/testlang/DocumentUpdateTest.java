@@ -58,7 +58,7 @@ public class DocumentUpdateTest {
     }
 
 
-    private TextDocumentContentChangeEvent createChange(int startLine, int startChar, int endLine, int endChar, String insertedText) {
+    static TextDocumentContentChangeEvent createChange(int startLine, int startChar, int endLine, int endChar, String insertedText) {
         return new TextDocumentContentChangeEvent(
                    new Range(
                              new Position(startLine, startChar), 
