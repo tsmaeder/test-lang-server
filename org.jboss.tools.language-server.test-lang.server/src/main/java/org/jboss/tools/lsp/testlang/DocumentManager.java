@@ -11,18 +11,15 @@
 
 package org.jboss.tools.lsp.testlang;
 
-import com.google.common.io.LineReader;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.jboss.tools.lsp.testlang.handlers.TestTextDocumentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
  * Default implementation of the {@link DocumentManager} interface.
@@ -140,12 +138,34 @@ public class DocumentManager {
             openFiles.remove(uri);
         }
     }
+    
+    public void findInDocument(TextDocumentIdentifier document, String selectedWord, LocationConsumer f) {
+        List<String> lines = openFiles.get(document.getUri());
+        IntStream.range(0, lines.size()).forEach(lineNumber -> {
+            int index = 0;
+            final String line = lines.get(lineNumber);
+            while ((index = line.indexOf(selectedWord, index)) != -1) {
+                // in this implementation, the kind of highlight
+                // will always be 'Text'
+                // (1)
+                if (!f.accept(document, 
+                         new Range(
+                                   new Position(lineNumber, index),
+                                   new Position(lineNumber, index + selectedWord.length())),
+                         selectedWord)) {
+                    return;
+                };
+                index += selectedWord.length();
+            }
+        });
 
-    public String getWordAtPosition(TextDocumentPositionParams location) throws IOException, URISyntaxException {
-        final List<String> lines = getContent(location.getTextDocument().getUri());
-        final String selectedLine = lines.get(location.getPosition().getLine());
+    }
+
+    public String getWordAtPosition(TextDocumentIdentifier document, Position position) throws IOException, URISyntaxException {
+        final List<String> lines = getContent(document.getUri());
+        final String selectedLine = lines.get(position.getLine());
         // find the selected word
-        return DocumentManager.findSelectedWord(location.getPosition().getCharacter(), selectedLine);
+        return DocumentManager.findSelectedWord(position.getCharacter(), selectedLine);
     }
 
     public static String findSelectedWord(final int selectionPosition, final String selectedLine) {

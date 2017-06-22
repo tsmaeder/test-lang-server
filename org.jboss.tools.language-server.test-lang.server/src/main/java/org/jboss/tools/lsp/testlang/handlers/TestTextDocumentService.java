@@ -36,7 +36,9 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
@@ -52,12 +54,13 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * An implementation of the TextDocumentService
@@ -178,66 +181,120 @@ public class TestTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position) {
-        return CompletableFuture.completedFuture(null);
+        SignatureHelp result= new SignatureHelp();
+        List<SignatureInformation> signatures= new ArrayList<>();
+        result.setSignatures(signatures);
+        signatures.add(new SignatureInformation("First sig", "some doc", Collections.emptyList()));
+        signatures.add(new SignatureInformation("Secont sig", "some more doc", Collections.emptyList()));
+        signatures.add(new SignatureInformation("Third sig", "some doc", Collections.emptyList()));
+        result.setActiveSignature(1);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
-    public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position) {
-        return CompletableFuture.completedFuture(Collections.emptyList());
+    public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams params) {
+        try {
+            DocumentManager dm = testLanguageServer.getDocumentManager();
+            String word = dm.getWordAtPosition(params.getTextDocument(), params.getPosition());
+            CompletableFuture<List<? extends Location>> result = new CompletableFuture<List<? extends Location>>();
+            if (word != null && word.length() > 0) {
+                dm.findInDocument(params.getTextDocument(), word, (doc, range, text) -> {
+                        result.complete(Collections.singletonList(new Location(doc.getUri(), range)));
+                    return true;
+                });
+            }
+            if (!result.isDone()) {
+                result.complete(Collections.emptyList());
+            }
+            return result;
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    interface OccurrenceHandler<T> {
+        T handle(TextDocumentIdentifier doc, Range range, String text);
+    }
+
+    private <T> CompletableFuture<List<? extends T>> doWithReferences(TextDocumentIdentifier document, Position pos,
+                                                                      OccurrenceHandler<T> handler) {
+        return CompletableFuture.supplyAsync(new Supplier<List<? extends T>>() {
+
+            @Override
+            public List<T> get() {
+                List<T> result = new ArrayList<>();
+                try {
+                    String selectedWord = testLanguageServer.getDocumentManager().getWordAtPosition(document, pos);
+                    if (selectedWord != null && selectedWord.length() > 0) {
+                        testLanguageServer.getDocumentManager().findInDocument(document, selectedWord, (doc, range, text) -> {
+                            T res = handler.handle(doc, range, text);
+                            if (res != null) {
+                                result.add(res);
+                            }
+                            return true;
+                        });
+                    }
+                } catch (IOException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+
+                return result;
+            }
+        });
     }
 
     @Override
     public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        return doWithReferences(params.getTextDocument(), params.getPosition(), (doc, range, text) -> {
+            return new Location(doc.getUri(), range);
+        });
     }
 
     @Override
-    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams position) {
-        return CompletableFuture.supplyAsync(new Supplier<List<? extends DocumentHighlight>>() {
-
-            @Override
-            public List<? extends DocumentHighlight> get() {
-                LOGGER.info("Handling document highlight request: " + position);
-                final List<DocumentHighlight> highlights = new ArrayList<>();
-                final TextDocumentIdentifier textDocumentIdentifier = position.getTextDocument();
-                // look-up the document from the given textDocumentIdentifier
-                final DocumentManager documentManager = testLanguageServer.getDocumentManager();
-                final String documentUri = textDocumentIdentifier.getUri();
-                // identify the selected text
-                final Position selectedPosition = position.getPosition();
-                try {
-                    final List<String> lines = documentManager.getContent(documentUri);
-                    final String selectedLine = lines.get(selectedPosition.getLine());
-                    // find the selected word
-                    final String selectedWord = DocumentManager.findSelectedWord(selectedPosition.getCharacter(), selectedLine);
-                    if (selectedWord.length() > 0) {
-                        IntStream.range(0, lines.size()).forEach(lineNumber -> {
-                            int index = 0;
-                            final String line = lines.get(lineNumber);
-                            while ((index = line.indexOf(selectedWord, index)) != -1) {
-                                // in this implementation, the kind of highlight
-                                // will always be 'Text'
-                                // (1)
-                                highlights.add(new DocumentHighlight(
-                                                new Range(new Position(lineNumber, index),
-                                                                new Position(lineNumber, index + selectedWord.length() - 1)),
-                                                DocumentHighlightKind.Text));
-                                index += selectedWord.length();
-                            }
-                        });
-                    }
-                    return highlights;
-                } catch (IOException | URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams params) {
+        return doWithReferences(params.getTextDocument(), params.getPosition(), (doc, range, text) -> {
+            return new DocumentHighlight(range, DocumentHighlightKind.Text);
         });
-
     }
 
     @Override
     public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params) {
-        return CompletableFuture.completedFuture(Collections.emptyList());
+        List<SymbolInformation> result= new ArrayList<>();
+        Set<String> foundWords= new HashSet<>();
+        try {
+            String uri = params.getTextDocument().getUri();
+            List<String> lines = testLanguageServer.getDocumentManager().getContent(uri);
+            for (int l= 0; l < lines.size(); l++) {
+                String line= lines.get(l);
+                int pos= 0;
+                while (pos < line.length()) {
+                    while (pos < line.length() && Character.isWhitespace(line.charAt(pos))) {
+                        pos++;
+                    }
+                    StringBuilder b= new StringBuilder();
+                    int startPos= pos;
+                    while (pos < line.length() && !Character.isWhitespace(line.charAt(pos))) {
+                        b.append(line.charAt(pos));
+                        pos++;
+                    }
+                    String word = b.toString();
+                    if (word.length() > 0 && !foundWords.contains(word)) {
+                        foundWords.add(word);
+                        SymbolInformation s= new SymbolInformation();
+                        s.setName(word +" (testls)"); 
+                        s.setKind(SymbolKind.String);
+                        s.setLocation(new Location(uri, 
+                                                   new Range(
+                                                             new Position(l, startPos), 
+                                                             new Position(l, pos))));
+                        result.add(s);
+                    }
+                }
+            }
+            return CompletableFuture.completedFuture(result);
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException("Error on didOpen", e);
+        }
     }
 
     @Override
