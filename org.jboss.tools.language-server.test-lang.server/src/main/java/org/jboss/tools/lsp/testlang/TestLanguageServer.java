@@ -10,7 +10,17 @@
  *******************************************************************************/
 package org.jboss.tools.lsp.testlang;
 
-import jnr.unixsocket.UnixSocketChannel;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.channels.Channels;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -36,15 +46,7 @@ import org.jboss.tools.lsp.testlang.handlers.TestWorkspaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.channels.Channels;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import jnr.unixsocket.UnixSocketChannel;
 
 /**
  * The Language Server Protocol implementation for the 'test-lang'.
@@ -61,6 +63,8 @@ public class TestLanguageServer implements ExtendedLanguageServer {
     private ExtendedLanguageClient languageClient;
 
     private Future<?> processor;
+
+	private File root;
 
     public static final String STDOUT_PIPE_NAME = "STDOUT_PIPE_NAME";
     public static final String STDIN_PIPE_NAME  = "STDIN_PIPE_NAME";
@@ -164,8 +168,9 @@ public class TestLanguageServer implements ExtendedLanguageServer {
 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-        String rootUri = params.getRootPath();
-        triggerInitialization(rootUri);
+        String rootPath = params.getRootPath();
+        this.root= new File(rootPath);
+        triggerInitialization(rootPath);
         final InitializeResult result = new InitializeResult();
         final ServerCapabilities capabilities = new ServerCapabilities();
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental);
@@ -218,6 +223,10 @@ public class TestLanguageServer implements ExtendedLanguageServer {
     public WorkspaceService getWorkspaceService() {
         return workspaceService;
     }
+    
+    public File getRoot() {
+		return root;
+	}
 
     @Override
     public CompletableFuture<String> getDocument(String uri) {

@@ -2,7 +2,9 @@ package org.jboss.tools.lsp.testlang;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
 import java.text.MessageFormat;
+import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,31 @@ public class Utils {
 			e.printStackTrace();
 			throw e;
 		}
+	}
 
+	public static void parse(Reader contents, BiConsumer<String, Integer> lineConsumer) throws IOException {
+		StringBuilder b = new StringBuilder();
+		int line = 0;
+		int ch = contents.read();
+		while (ch >= 0) {
+			if (ch == '\r') {
+				ch = contents.read();
+				if (ch == '\n') {
+					ch = contents.read();
+				}
+				lineConsumer.accept(b.toString(), line++);
+				b = new StringBuilder();
+			} else {
+				if (ch == '\n') {
+					lineConsumer.accept(b.toString(), line++);
+					b = new StringBuilder();
+				} else {
+					b.append((char)ch);
+				}
+				ch= contents.read();
+			}
+		}
+		lineConsumer.accept(b.toString(), line++);
 	}
 
 }
