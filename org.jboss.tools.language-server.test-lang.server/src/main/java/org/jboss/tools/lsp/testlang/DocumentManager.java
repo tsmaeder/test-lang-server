@@ -155,8 +155,14 @@ public class DocumentManager {
 	public String getWordAtPosition(TextDocumentIdentifier document, Position position)
 			throws IOException, URISyntaxException {
 		final List<String> lines = getContent(document.getUri());
+		if (position.getLine() >= lines.size()) {
+		  return "";
+		}
 		final String selectedLine = lines.get(position.getLine());
 		// find the selected word
+		if (position.getCharacter() >= selectedLine.length()) {
+		  return "";
+		}
 		return DocumentManager.findSelectedWord(position.getCharacter(), selectedLine);
 	}
 

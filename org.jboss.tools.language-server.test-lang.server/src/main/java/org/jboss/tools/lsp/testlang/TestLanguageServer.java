@@ -150,7 +150,7 @@ public class TestLanguageServer implements ExtendedLanguageServer {
         languageClient.showMessage(new MessageParams(type, msg));
     }
 
-    public CompletableFuture<Void> sendShowMessageRequest(final MessageType type, final String msg, String command) {
+    public CompletableFuture<MessageActionItem> sendShowMessageRequest(final MessageType type, final String msg, String command) {
         return languageClient.showMessageRequest(new ShowMessageRequestParams(Arrays.asList(new MessageActionItem(command))));
     }
 

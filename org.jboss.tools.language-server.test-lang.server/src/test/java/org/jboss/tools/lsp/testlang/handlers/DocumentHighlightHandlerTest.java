@@ -44,8 +44,7 @@ public class DocumentHighlightHandlerTest {
 		// then
 		LOGGER.debug("Result: {}", result.stream().map(r -> "'" + r + "'").collect(Collectors.joining(", ")));
 		assertThat(result.stream().allMatch(w -> w.equals("Foo"))).isTrue();
-
-	}
+	} 
 
 	@Test
 	public void shouldHighlightText() throws IOException, URISyntaxException, InterruptedException, ExecutionException {
